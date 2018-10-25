@@ -46,7 +46,8 @@ import static java.lang.String.format;
 import static spark.Spark.*;
 
 @Component
-public class ElasticProfileControllerV1 extends ApiController implements SparkSpringController, CrudController<ElasticProfile> {
+public class
+ElasticProfileControllerV1 extends ApiController implements SparkSpringController, CrudController<ElasticProfile> {
     private static final String PROFILE_ID_PARAM = "profile_id";
     private final ElasticProfileService elasticProfileService;
     private final ApiAuthenticationHelper apiAuthenticationHelper;

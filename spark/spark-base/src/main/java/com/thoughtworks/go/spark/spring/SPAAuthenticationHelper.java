@@ -41,4 +41,8 @@ public class SPAAuthenticationHelper extends AbstractAuthenticationHelper {
         return halt(403, HtmlErrorPage.errorPage(403, "Forbidden"));
     }
 
+    @Override
+    protected HaltException renderForbiddenResponse(String message) {
+        return halt(403, HtmlErrorPage.errorPage(403, String.format("Forbidden: %s", message)));
+    }
 }

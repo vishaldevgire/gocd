@@ -354,6 +354,22 @@ public class Routes {
         public static final String BASE = "/api/v1/health";
     }
 
+    public static class AccessTokenAPI {
+        public static final String BASE = "/api/tokens";
+        public static final String GET_TOKEN = "/:name";
+        public static final String DELETE_TOKEN = "/:name";
+        public static final String CREATE_TOKEN = "/generate";
+        public static final String DOC = "https://api.gocd.org/current/#api-access-token";
+
+        public static String find() {
+            return BASE + GET_TOKEN;
+        }
+
+        public static String name(String tokenName) {
+            return String.join("/", BASE, tokenName);
+        }
+    }
+
     public class KitchenSink {
         public static final String SPA_BASE = "/kitchen-sink";
     }

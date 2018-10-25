@@ -201,7 +201,7 @@ public class JobRerunScheduleServiceTest {
         when(instanceFactory.createStageForRerunOfJobs(eq(firstStage), eq(a("unit")), any(SchedulingContext.class), eq(stageConfig), eq(timeProvider), eq(latestMd5)))
                 .thenThrow(new CannotScheduleException("Could not find matching agents to run job [unit] of stage [build].", "build"));
 
-        assertScheduleFailure("unit", firstStage, "Could not find matching agents to run job [unit] of stage [build].", 409);
+        assertScheduleFailure("unit", firstStage, "Could not find matching agents to run job [unit] of stage [build].", 500);
     }
 
     @Test

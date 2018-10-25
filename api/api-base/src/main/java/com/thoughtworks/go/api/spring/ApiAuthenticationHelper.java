@@ -38,4 +38,9 @@ public class ApiAuthenticationHelper extends AbstractAuthenticationHelper {
         return HaltApiResponses.haltBecauseForbidden();
     }
 
+    @Override
+    protected HaltException renderForbiddenResponse(String message) {
+        LOG.info("User {} attempted to perform an unauthorized action: {}", currentUserLoginName(), message);
+        return HaltApiResponses.haltBecauseForbidden(message);
+    }
 }

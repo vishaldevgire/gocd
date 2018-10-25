@@ -43,6 +43,7 @@ public abstract class AbstractAuthenticationHelper {
     }
 
     protected abstract HaltException renderForbiddenResponse();
+    protected abstract HaltException renderForbiddenResponse(String message);
 
     public void checkUserAnd403(Request req, Response res) {
         if (!securityService.isSecurityEnabled()) {
@@ -50,6 +51,12 @@ public abstract class AbstractAuthenticationHelper {
         }
 
         checkNonAnonymousUser(req, res);
+    }
+
+    public void checkSecurityEnabledAndReturn403(Request req, Response res) {
+        if (!securityService.isSecurityEnabled()) {
+            renderForbiddenResponse("Could not process request as security is disabled.");
+        }
     }
 
     public void checkNonAnonymousUser(Request req, Response res) {

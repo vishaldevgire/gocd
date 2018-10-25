@@ -110,4 +110,58 @@ class JsonReaderTest {
         .isThrownBy({ reader.readJsonObject("foo") })
     }
   }
+
+  @Nested
+  class OptLong {
+    @Test
+    void 'should read long value'() {
+      def reader = GsonTransformer.instance.jsonReaderFrom(["foo": "12345"])
+      def actualValue = reader.optLong("foo")
+
+      assertThat(actualValue).isEqualTo(Optional.of(12345L))
+    }
+
+    @Test
+    void 'should read empty optional value if property does not exist'() {
+      def reader = GsonTransformer.instance.jsonReaderFrom(["bar":"baz"])
+      def actualValue = reader.optLong("foo")
+
+      assertThat(actualValue).isEqualTo(Optional.empty())
+    }
+  }
+
+
+  @Nested
+  class Int {
+    @Test
+    void 'should read valid int value'() {
+      def reader = GsonTransformer.instance.jsonReaderFrom(["foo": 12])
+      assertThat(reader.getInt("foo")).isEqualTo(12)
+    }
+
+    @Test
+    void 'should blow up if reading wrong type'() {
+      def reader = GsonTransformer.instance.jsonReaderFrom(["foo": "bar"])
+      assertThatExceptionOfType(HaltException.class)
+        .isThrownBy({ reader.getInt("foo") })
+      assertThatExceptionOfType(HaltException.class)
+        .isThrownBy({ reader.optInt("foo") })
+    }
+
+    @Test
+    void 'should read optional int value'() {
+      def reader = GsonTransformer.instance.jsonReaderFrom(["foo": "12345"])
+      def actualValue = reader.optInt("foo")
+
+      assertThat(actualValue).isEqualTo(Optional.of(12345))
+    }
+
+    @Test
+    void 'should read empty optional value if property does not exist'() {
+      def reader = GsonTransformer.instance.jsonReaderFrom(["bar":"baz"])
+      def actualValue = reader.optInt("foo")
+
+      assertThat(actualValue).isEqualTo(Optional.empty())
+    }
+  }
 }

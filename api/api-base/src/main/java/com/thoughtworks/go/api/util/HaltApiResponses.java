@@ -29,11 +29,19 @@ import static spark.Spark.halt;
 
 public abstract class HaltApiResponses {
     public static HaltException haltBecauseNotFound() {
-        return halt(HttpStatus.NOT_FOUND.value(), MessageJson.create(notFoundMessage()));
+        return haltBecauseNotFound(notFoundMessage());
+    }
+
+    public static HaltException haltBecauseNotFound(String message) {
+        return halt(HttpStatus.NOT_FOUND.value(), MessageJson.create(message));
+    }
+
+    public static HaltException haltBecauseForbidden(String message) {
+        return halt(HttpStatus.FORBIDDEN.value(), MessageJson.create(message));
     }
 
     public static HaltException haltBecauseForbidden() {
-        return halt(HttpStatus.FORBIDDEN.value(), MessageJson.create(forbiddenMessage()));
+        return haltBecauseForbidden(forbiddenMessage());
     }
 
     public static HaltException haltBecauseEntityAlreadyExists(Consumer<OutputWriter> jsonInRequestBody, String entityType, Object existingName) {

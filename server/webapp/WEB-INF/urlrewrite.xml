@@ -298,6 +298,18 @@
   </rule>
 
   <rule>
+    <name>Access Token index API</name>
+    <from>^/api/tokens(/?)$</from>
+    <to last="true">/spark/api/tokens</to>
+  </rule>
+
+  <rule>
+    <name>Access Token APIs</name>
+    <from>^/api/tokens/(.*)$</from>
+    <to last="true">/spark/api/tokens/${escape:$1}</to>
+  </rule>
+
+  <rule>
     <name>Initialize for_rails</name>
     <from>.*</from>
     <set name="rails_bound">false</set>

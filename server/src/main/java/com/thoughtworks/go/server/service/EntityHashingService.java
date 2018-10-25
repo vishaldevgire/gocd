@@ -22,13 +22,13 @@ import com.thoughtworks.go.config.elastic.ElasticProfile;
 import com.thoughtworks.go.config.merge.MergePipelineConfigs;
 import com.thoughtworks.go.config.registry.ConfigElementImplementationRegistry;
 import com.thoughtworks.go.config.remote.ConfigRepoConfig;
+import com.thoughtworks.go.domain.AccessToken;
 import com.thoughtworks.go.domain.PipelineGroups;
 import com.thoughtworks.go.domain.UsageStatisticsReporting;
 import com.thoughtworks.go.domain.packagerepository.PackageDefinition;
 import com.thoughtworks.go.domain.packagerepository.PackageRepository;
 import com.thoughtworks.go.domain.scm.SCM;
 import com.thoughtworks.go.listener.ConfigChangedListener;
-import com.thoughtworks.go.listener.DataSharingSettingsChangeListener;
 import com.thoughtworks.go.listener.EntityConfigChangedListener;
 import com.thoughtworks.go.server.cache.GoCache;
 import com.thoughtworks.go.server.domain.DataSharingSettings;
@@ -233,6 +233,10 @@ public class EntityHashingService implements ConfigChangedListener, Initializer 
     public String md5ForEntity(PipelineConfigs pipelineConfigs) {
         String cacheKey = cacheKey(pipelineConfigs, pipelineConfigs.getGroup());
         return getFromCache(pipelineConfigs, cacheKey);
+    }
+
+    public String md5ForEntity(AccessToken entityFromServer) {
+        return null;
     }
 
     class PipelineConfigChangedListener extends EntityConfigChangedListener<PipelineConfig> {

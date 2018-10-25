@@ -59,6 +59,18 @@ public class JsonReader {
         return Optional.empty();
     }
 
+    public Optional<Integer> optInt(String property) {
+        if (hasJsonObject(property)) {
+            try {
+                return Optional.ofNullable(jsonObject.get(property).getAsInt());
+            } catch (Exception e) {
+                throw haltBecausePropertyIsNotAJsonString(property, jsonObject);
+            }
+        }
+        return Optional.empty();
+    }
+
+
     public Optional<String> optString(String property) {
         if (hasJsonObject(property)) {
             try {
@@ -149,5 +161,10 @@ public class JsonReader {
         }
 
         return Optional.empty();
+    }
+
+    public Integer getInt(String property) {
+        return optInt(property)
+                .orElseThrow(() -> haltBecauseMissingJsonProperty(property, jsonObject));
     }
 }

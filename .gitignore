@@ -173,6 +173,7 @@ api/api-template-config-v4/target/
 api/api-user-representers-v1/logs/
 api/api-user-representers-v1/out/
 api/api-user-representers-v1/target/
+api/api-access-token-v1/out/
 app-server/out/
 app-server/target/
 base/logs/
