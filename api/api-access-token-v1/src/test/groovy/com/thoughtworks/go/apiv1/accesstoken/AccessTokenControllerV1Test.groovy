@@ -18,7 +18,9 @@ package com.thoughtworks.go.apiv1.accesstoken
 
 import com.thoughtworks.go.api.SecurityTestTrait
 import com.thoughtworks.go.api.spring.ApiAuthenticationHelper
-import com.thoughtworks.go.domain.AccessToken
+import com.thoughtworks.go.config.exceptions.RecordNotFoundException
+import com.thoughtworks.go.server.domain.accesstoken.AccessToken
+import com.thoughtworks.go.server.domain.accesstoken.AccessTokenInfo
 import com.thoughtworks.go.server.service.AccessTokenService
 import com.thoughtworks.go.server.service.AdminsConfigService
 import com.thoughtworks.go.server.service.EntityHashingService
@@ -33,7 +35,8 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mock
 
 import static org.mockito.ArgumentMatchers.any
-import static org.mockito.ArgumentMatchers.anyString
+import static org.mockito.ArgumentMatchers.anyLong
+import static org.mockito.Mockito.verify
 import static org.mockito.Mockito.when
 import static org.mockito.MockitoAnnotations.initMocks
 
@@ -104,7 +107,7 @@ class AccessTokenControllerV1Test implements SecurityServiceTrait, ControllerTra
               "href": "https://api.gocd.org/current/#api-access-token"
             ],
             "find": [
-              "href": "http://test.host/go/api/tokens/:token_id"
+              "href": "http://test.host/go/api/tokens/:name"
             ]
           ],
           "_embedded": [
@@ -118,7 +121,7 @@ class AccessTokenControllerV1Test implements SecurityServiceTrait, ControllerTra
                     "href": "https://api.gocd.org/current/#api-access-token"
                   ],
                   "find": [
-                    "href": "http://test.host/go/api/tokens/:token_id"
+                    "href": "http://test.host/go/api/tokens/:name"
                   ]
                 ],
                 "name"       : "PersonToken",
@@ -134,7 +137,7 @@ class AccessTokenControllerV1Test implements SecurityServiceTrait, ControllerTra
                     "href": "https://api.gocd.org/current/#api-access-token"
                   ],
                   "find": [
-                    "href": "http://test.host/go/api/tokens/:token_id"
+                    "href": "http://test.host/go/api/tokens/:name"
                   ]
                 ],
                 "name"       : "WorkToken",
@@ -145,12 +148,8 @@ class AccessTokenControllerV1Test implements SecurityServiceTrait, ControllerTra
           ]
         ]
 
-        def token1 = new AccessToken("PersonToken", "Personal Token", 987654321,
-          "cfa2e1832e38cad72729b924865a47a0")
-
-        def token2 = new AccessToken("WorkToken", "Token for work only", 876543219,
-          "857faf4b42fc9e324fb40b7223f2a94a")
-
+        def token1 = new AccessToken("PersonToken", "Personal Token", 987654321)
+        def token2 = new AccessToken("WorkToken", "Token for work only", 876543219)
 
         when(accessTokenService.getAllTokensForUser(currentUserLoginId())).thenReturn([token1, token2])
 
@@ -210,7 +209,7 @@ class AccessTokenControllerV1Test implements SecurityServiceTrait, ControllerTra
               "href": "https://api.gocd.org/current/#api-access-token"
             ],
             "find": [
-              "href": "http://test.host/go/api/tokens/:token_id"
+              "href": "http://test.host/go/api/tokens/:name"
             ]
           ],
           "name"       : "PersonToken",
@@ -218,13 +217,9 @@ class AccessTokenControllerV1Test implements SecurityServiceTrait, ControllerTra
           "expires_at" : 987654321
         ]
 
-        def token1 = new AccessToken("PersonToken", "Personal Token", 987654321,
-          "cfa2e1832e38cad72729b924865a47a0")
+        def token1 = new AccessToken("PersonToken", "Personal Token", 987654321)
 
-        def token2 = new AccessToken("WorkToken", "Token for work only", 876543219,
-          "857faf4b42fc9e324fb40b7223f2a94a")
-
-        when(accessTokenService.getAllTokensForUser(currentUserLoginId())).thenReturn([token1, token2])
+        when(accessTokenService.getTokenForUser(currentUserLoginId(), "PersonToken")).thenReturn(Optional.of(token1))
 
         getWithApiHeader(controller.controllerPath("PersonToken"))
 
@@ -236,13 +231,7 @@ class AccessTokenControllerV1Test implements SecurityServiceTrait, ControllerTra
 
       @Test
       void 'should return 404 for a unknown token'() {
-        def token1 = new AccessToken("PersonToken", "Personal Token", 5,
-          "cfa2e1832e38cad72729b924865a47a0")
-
-        def token2 = new AccessToken("WorkToken", "Token for work only", 2,
-          "857faf4b42fc9e324fb40b7223f2a94a")
-
-        when(accessTokenService.getAllTokensForUser(currentUserLoginId())).thenReturn([token1, token2])
+        when(accessTokenService.getTokenForUser(currentUserLoginId(), "UnknownToken")).thenReturn(Optional.empty())
 
         getWithApiHeader(controller.controllerPath("UnknownToken"))
 
@@ -299,17 +288,9 @@ class AccessTokenControllerV1Test implements SecurityServiceTrait, ControllerTra
           "message": "The access token 'PersonToken' was deleted successfully."
         ]
 
-        def token1 = new AccessToken("PersonToken", "Personal Token", 5,
-          "cfa2e1832e38cad72729b924865a47a0")
-
-        def token2 = new AccessToken("WorkToken", "Token for work only", 2,
-          "857faf4b42fc9e324fb40b7223f2a94a")
-
-        when(accessTokenService.getAllTokensForUser(currentUserLoginId())).thenReturn([token1, token2])
-        when(accessTokenService.deleteToken(anyString())).thenReturn(true)
-
-
         deleteWithApiHeader(controller.controllerPath("PersonToken"))
+
+        verify(accessTokenService).deleteToken(currentUserLoginId(), "PersonToken")
 
         assertThatResponse()
           .isOk()
@@ -319,19 +300,14 @@ class AccessTokenControllerV1Test implements SecurityServiceTrait, ControllerTra
 
       @Test
       void 'should return 404 for a unknown token'() {
-        def token1 = new AccessToken("PersonToken", "Personal Token", 5,
-          "cfa2e1832e38cad72729b924865a47a0")
-
-        def token2 = new AccessToken("WorkToken", "Token for work only", 2,
-          "857faf4b42fc9e324fb40b7223f2a94a")
-
-        when(accessTokenService.getAllTokensForUser(currentUserLoginId())).thenReturn([token1, token2])
-
-        deleteWithApiHeader(controller.controllerPath("UnknownToken"))
-
         def expectedJson = [
           "message": "The token with name 'UnknownToken' was not found."
         ]
+
+        when(accessTokenService.deleteToken(currentUserLoginId(), "UnknownToken"))
+          .thenThrow(new RecordNotFoundException("The token with name 'UnknownToken' was not found."))
+
+        deleteWithApiHeader(controller.controllerPath("UnknownToken"))
 
         assertThatResponse()
           .isNotFound()
@@ -384,14 +360,14 @@ class AccessTokenControllerV1Test implements SecurityServiceTrait, ControllerTra
           expires_in_hours: 5
         ]
 
-        when(accessTokenService.createToken(any() as AccessToken)).thenReturn("token-string")
+        when(accessTokenService.createToken(anyLong(), any() as AccessTokenInfo)).thenReturn("<token-string>")
 
         postWithApiHeader(controller.controllerPath("generate"), json)
 
         assertThatResponse()
           .isOk()
           .hasContentType("text/plain;charset=utf-8")
-          .hasBody("token-string")
+          .hasBody("<token-string>")
       }
 
       @Test

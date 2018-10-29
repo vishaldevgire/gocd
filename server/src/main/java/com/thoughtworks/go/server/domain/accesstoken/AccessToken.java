@@ -14,23 +14,28 @@
  * limitations under the License.
  */
 
-package com.thoughtworks.go.domain;
+package com.thoughtworks.go.server.domain.accesstoken;
+
+import com.thoughtworks.go.domain.PersistentObject;
+
+import java.util.UUID;
 
 public class AccessToken extends PersistentObject {
     private String name;
     private String description;
-    private String token;
+    private String value;
     private Long expiresAt;
 
     public AccessToken(String name, String description, Long expiresAt) {
-        this(name, description, expiresAt, null);
-    }
-
-    public AccessToken(String name, String description, Long expiresAt, String token) {
         this.name = name;
         this.description = description;
         this.expiresAt = expiresAt;
-        this.token = token;
+    }
+
+    public static AccessToken from(AccessTokenInfo accessTokenInfo) {
+        final AccessToken accessToken = new AccessToken(accessTokenInfo.getName(), accessTokenInfo.getDescription(), accessTokenInfo.getExpiresAt());
+        accessToken.value = UUID.randomUUID().toString().replaceAll("-", "").toUpperCase();
+        return accessToken;
     }
 
     public String getName() {
@@ -41,8 +46,8 @@ public class AccessToken extends PersistentObject {
         return description;
     }
 
-    public String getToken() {
-        return token;
+    public String getValue() {
+        return value;
     }
 
     public Long getExpiresAt() {

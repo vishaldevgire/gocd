@@ -16,23 +16,57 @@
 
 package com.thoughtworks.go.server.service;
 
-import com.thoughtworks.go.domain.AccessToken;
+import com.thoughtworks.go.config.exceptions.RecordNotFoundException;
+import com.thoughtworks.go.server.dao.AccessTokenDao;
+import com.thoughtworks.go.server.domain.accesstoken.AccessToken;
+import com.thoughtworks.go.server.domain.accesstoken.AccessTokenInfo;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+
+import static java.lang.String.format;
 
 @Service
 public class AccessTokenService {
-    public String createToken(AccessToken accessToken) {
-        return "fshdkfhsdkf";
+    private AccessTokenDao accessTokenDao;
+
+    @Autowired
+    public AccessTokenService(AccessTokenDao accessTokenDao) {
+        this.accessTokenDao = accessTokenDao;
+    }
+
+    public String createToken(Long userId, AccessTokenInfo accessTokenInfo) {
+        final Optional<AccessToken> tokenFromDB = getTokenForUser(userId, accessTokenInfo.getName());
+
+        if (tokenFromDB.isPresent()) {
+            throw new RuntimeException(format("Token with name '%s' already exist.", accessTokenInfo.getName()));
+        }
+
+        final AccessToken accessToken = AccessToken.from(accessTokenInfo);
+        return accessTokenDao.save(accessToken).getValue();
     }
 
     public List<AccessToken> getAllTokensForUser(Long userId) {
-        return Collections.emptyList();
+        return accessTokenDao.getAllTokensForUser(userId);
     }
 
-    public boolean deleteToken(String id) {
-        throw new RuntimeException("Not implemented yet");
+    public Optional<AccessToken> getTokenForUser(Long userId, String tokenName) {
+        return getAllTokensForUser(userId)
+                .stream()
+                .filter(accessToken -> StringUtils.equals(accessToken.getName(), tokenName))
+                .findFirst();
+    }
+
+    public void deleteToken(Long userId, String tokenName) {
+        final Optional<AccessToken> tokenFromDB = getTokenForUser(userId, tokenName);
+
+        if (!tokenFromDB.isPresent()) {
+            throw new RecordNotFoundException(format("The token with name '%s' was not found.", tokenName));
+        }
+
+        accessTokenDao.delete(tokenFromDB.get());
     }
 }

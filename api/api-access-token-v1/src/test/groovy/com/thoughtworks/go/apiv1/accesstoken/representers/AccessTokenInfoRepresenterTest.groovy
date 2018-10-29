@@ -17,27 +17,28 @@
 package com.thoughtworks.go.apiv1.accesstoken.representers
 
 import com.thoughtworks.go.api.util.GsonTransformer
-import com.thoughtworks.go.server.domain.accesstoken.AccessToken
+import com.thoughtworks.go.server.domain.accesstoken.AccessTokenInfo
+import com.thoughtworks.go.util.TestingClock
 import org.junit.jupiter.api.Test
 
 import static org.assertj.core.api.Assertions.assertThat
 
-class AccessTokenRepresenterTest {
+class AccessTokenInfoRepresenterTest {
+  @Test
+  void 'should de-serialize json'() {
+    def inputJson = [
+      name            : "personal",
+      description     : "A personal token",
+      expires_in_hours: 1234
+    ]
 
-    @Test
-    void 'should de-serialize json' () {
-        def inputJson = [
-          name: "personal",
-          description: "A personal token",
-          expires_in_hours: 1234
-        ]
+    def jsonReader = GsonTransformer.instance.jsonReaderFrom(inputJson)
 
-        def jsonReader = GsonTransformer.instance.jsonReaderFrom(inputJson)
+    AccessTokenInfo accessToken = AccessTokenInfoRepresenter.fromJSON(jsonReader, new TestingClock())
 
-        AccessToken accessToken = AccessTokenRepresenter.fromJSON(jsonReader)
+    assertThat(accessToken.getName()).isEqualTo("personal")
+    assertThat(accessToken.getDescription()).isEqualTo("A personal token")
+    assertThat(accessToken.getExpiresAt()).isEqualTo(1234)
+  }
 
-        assertThat(accessToken.getName()).isEqualTo("personal")
-        assertThat(accessToken.getDescription()).isEqualTo("A personal token")
-        assertThat(accessToken.getExpiresAt()).isEqualTo(1234)
-    }
 }

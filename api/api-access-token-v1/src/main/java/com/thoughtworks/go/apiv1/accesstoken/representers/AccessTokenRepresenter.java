@@ -17,18 +17,10 @@
 package com.thoughtworks.go.apiv1.accesstoken.representers;
 
 import com.thoughtworks.go.api.base.OutputWriter;
-import com.thoughtworks.go.api.representers.JsonReader;
-import com.thoughtworks.go.domain.AccessToken;
+import com.thoughtworks.go.server.domain.accesstoken.AccessToken;
 import com.thoughtworks.go.spark.Routes;
-import com.thoughtworks.go.util.Clock;
 
 public class AccessTokenRepresenter {
-    public static AccessToken fromJSON(JsonReader reader, Clock clock) {
-        return new AccessToken(reader.getString("name"),
-                reader.optString("description").orElse(null),
-                clock.currentDateTime().plusHours(reader.getInt("expires_in_hours")).getMillis());
-    }
-
     public static void toJSON(OutputWriter outputWriter, AccessToken accessToken) {
         outputWriter
                 .addLinks(linksWriter -> linksWriter

@@ -17,7 +17,7 @@
 package com.thoughtworks.go.apiv1.accesstoken.representers;
 
 import com.thoughtworks.go.api.base.OutputWriter;
-import com.thoughtworks.go.domain.AccessToken;
+import com.thoughtworks.go.server.domain.accesstoken.AccessToken;
 import com.thoughtworks.go.spark.Routes;
 
 import java.util.List;

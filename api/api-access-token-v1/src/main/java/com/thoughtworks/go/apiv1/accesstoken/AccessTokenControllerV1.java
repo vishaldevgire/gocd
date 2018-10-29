@@ -23,12 +23,16 @@ import com.thoughtworks.go.api.CrudController;
 import com.thoughtworks.go.api.representers.JsonReader;
 import com.thoughtworks.go.api.spring.ApiAuthenticationHelper;
 import com.thoughtworks.go.api.util.GsonTransformer;
+import com.thoughtworks.go.api.util.HaltApiMessages;
 import com.thoughtworks.go.api.util.HaltApiResponses;
+import com.thoughtworks.go.api.util.MessageJson;
+import com.thoughtworks.go.apiv1.accesstoken.representers.AccessTokenInfoRepresenter;
 import com.thoughtworks.go.apiv1.accesstoken.representers.AccessTokenRepresenter;
 import com.thoughtworks.go.apiv1.accesstoken.representers.AccessTokensRepresenter;
 import com.thoughtworks.go.config.exceptions.RecordNotFoundException;
-import com.thoughtworks.go.domain.AccessToken;
 import com.thoughtworks.go.i18n.LocalizedMessage;
+import com.thoughtworks.go.server.domain.accesstoken.AccessToken;
+import com.thoughtworks.go.server.domain.accesstoken.AccessTokenInfo;
 import com.thoughtworks.go.server.service.AccessTokenService;
 import com.thoughtworks.go.server.service.EntityHashingService;
 import com.thoughtworks.go.server.service.result.HttpLocalizedOperationResult;
@@ -36,6 +40,7 @@ import com.thoughtworks.go.spark.Routes.AccessTokenAPI;
 import com.thoughtworks.go.spark.spring.SparkSpringController;
 import com.thoughtworks.go.util.Clock;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import spark.Request;
 import spark.Response;
@@ -100,46 +105,35 @@ public class AccessTokenControllerV1 extends ApiController implements SparkSprin
     public String getToken(Request request, Response response) throws IOException {
         String tokenName = request.params("name");
 
-        Optional<AccessToken> optToken = accessTokenService.getAllTokensForUser(currentUserId(request))
-                .stream()
-                .filter((AccessToken t) -> t.getName().equals(tokenName))
-                .findFirst();
+        final Optional<AccessToken> optionalAccessToken = accessTokenService.getTokenForUser(currentUserId(request), tokenName);
 
-        if (!optToken.isPresent()) {
-            throw HaltApiResponses.haltBecauseNotFound(String.format("The token with name '%s' was not found.", tokenName));
+        if (optionalAccessToken.isPresent()) {
+            return writerForTopLevelObject(request, response, writer -> AccessTokenRepresenter.toJSON(writer, optionalAccessToken.get()));
         }
 
-        return writerForTopLevelObject(request, response, writer -> AccessTokenRepresenter.toJSON(writer, optToken.get()));
+        throw new RecordNotFoundException(String.format("The token with name '%s' was not found.", tokenName));
     }
 
     public String createToken(Request request, Response response) {
         JsonReader reader = GsonTransformer.getInstance().jsonReaderFrom(request.body());
-        AccessToken accessToken = AccessTokenRepresenter.fromJSON(reader, clock);
+        AccessTokenInfo accessTokenInfo = AccessTokenInfoRepresenter.fromJSON(reader, clock);
 
         response.type(TEXT_PLAIN);
         response.raw().setCharacterEncoding("utf-8");
 
-        return accessTokenService.createToken(accessToken);
+        try {
+            return accessTokenService.createToken(currentUserId(request), accessTokenInfo);
+        } catch (RuntimeException e) {
+            throw HaltApiResponses.haltBecauseOfReason(HaltApiMessages.entityAlreadyExistsMessage("access token", accessTokenInfo.getName()));
+        }
     }
 
     public String deleteToken(Request request, Response response) throws IOException {
         String tokenName = request.params("name");
-
-        Optional<AccessToken> optToken = accessTokenService.getAllTokensForUser(currentUserId(request))
-                .stream()
-                .filter((AccessToken t) -> t.getName().equals(tokenName))
-                .findFirst();
-
-        if (!optToken.isPresent()) {
-            throw HaltApiResponses.haltBecauseNotFound(String.format("The token with name '%s' was not found.", tokenName));
-        }
+        accessTokenService.deleteToken(currentUserId(request), tokenName);
 
         HttpLocalizedOperationResult result = new HttpLocalizedOperationResult();
-
-        if (accessTokenService.deleteToken(tokenName)) {
-            result.setMessage(LocalizedMessage.resourceDeleteSuccessful("access token", optToken.get().getName()));
-        }
-
+        result.setMessage(LocalizedMessage.resourceDeleteSuccessful("access token", tokenName));
         return renderHTTPOperationResult(result, request, response);
     }
 
@@ -166,5 +160,15 @@ public class AccessTokenControllerV1 extends ApiController implements SparkSprin
     @Override
     public JsonNode jsonNode(Request req, AccessToken o) throws IOException {
         return null; // to be implemented
+    }
+
+    @Override
+    public void notFound(Exception ex, Request req, Response res) {
+        if (ex instanceof RecordNotFoundException) {
+            res.status(HttpStatus.NOT_FOUND.value());
+            res.body(MessageJson.create(ex.getMessage()));
+        } else {
+            super.notFound(ex, req, res);
+        }
     }
 }

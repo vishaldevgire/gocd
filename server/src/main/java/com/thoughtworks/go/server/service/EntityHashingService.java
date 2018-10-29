@@ -22,7 +22,7 @@ import com.thoughtworks.go.config.elastic.ElasticProfile;
 import com.thoughtworks.go.config.merge.MergePipelineConfigs;
 import com.thoughtworks.go.config.registry.ConfigElementImplementationRegistry;
 import com.thoughtworks.go.config.remote.ConfigRepoConfig;
-import com.thoughtworks.go.domain.AccessToken;
+import com.thoughtworks.go.server.domain.accesstoken.AccessToken;
 import com.thoughtworks.go.domain.PipelineGroups;
 import com.thoughtworks.go.domain.UsageStatisticsReporting;
 import com.thoughtworks.go.domain.packagerepository.PackageDefinition;
