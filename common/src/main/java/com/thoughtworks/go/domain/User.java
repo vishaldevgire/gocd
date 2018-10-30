@@ -291,4 +291,10 @@ public class User extends PersistentObject {
         }
         return false;
     }
+
+    public static User getUserInstanceWithId(long userId) {
+        User user = new User();
+        user.setId(userId);
+        return user;
+    }
 }

@@ -28,7 +28,7 @@ public class AccessTokenRepresenter {
                         .addAbsoluteLink("doc", Routes.AccessTokenAPI.DOC)
                         .addLink("find", Routes.AccessTokenAPI.find()))
                 .add("name", accessToken.getName())
-                .add("description", accessToken.getDescription())
+                .addIfNotNull("description", accessToken.getDescription())
                 .add("expires_at", accessToken.getExpiresAt());
     }
 }

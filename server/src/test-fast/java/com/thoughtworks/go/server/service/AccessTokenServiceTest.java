@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-public class AccessTokenServiceTest {
+class AccessTokenServiceTest {
     private AccessTokenService accessTokenService;
     private TestingClock testingClock;
     @Mock
@@ -66,12 +66,14 @@ public class AccessTokenServiceTest {
             final AccessTokenInfo accessTokenInfo = new AccessTokenInfo("PersonalAccessToken", "This is a dummy token", testingClock.currentTimeMillis());
 
             final ArgumentCaptor<AccessToken> accessTokenArgumentCaptor = ArgumentCaptor.forClass(AccessToken.class);
-            when(accessTokenDao.save(accessTokenArgumentCaptor.capture())).then((invocationOnMock) -> invocationOnMock.getArgument(0));
 
             final String token = accessTokenService.createToken(1L, accessTokenInfo);
             assertThat(token).isNotNull().hasSize(32);
 
+            verify(accessTokenDao).save(accessTokenArgumentCaptor.capture());
+
             final AccessToken captorValue = accessTokenArgumentCaptor.getValue();
+
             assertThat(token).isEqualTo(captorValue.getValue());
             assertThat(captorValue.getName()).isEqualTo("PersonalAccessToken");
             assertThat(captorValue.getDescription()).isEqualTo("This is a dummy token");
@@ -79,7 +81,6 @@ public class AccessTokenServiceTest {
             assertThat(captorValue.getUserId()).isEqualTo(1L);
 
             verify(accessTokenDao).listAllTokensForUser(1L);
-            verify(accessTokenDao).save(captorValue);
             verifyNoMoreInteractions(accessTokenDao);
         }
 

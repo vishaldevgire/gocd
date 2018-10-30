@@ -30,7 +30,9 @@
     <property name="value"/>
     <property name="expiresAt"/>
 
-    <many-to-one name="userId" class="com.thoughtworks.go.domain.User" column="userId" cascade="all-delete-orphan"
+    <many-to-one name="user" class="com.thoughtworks.go.domain.User"
+                 foreign-key="userId"
+                 column="userId"
                  fetch="select" not-null="true"/>
   </class>
 </hibernate-mapping>

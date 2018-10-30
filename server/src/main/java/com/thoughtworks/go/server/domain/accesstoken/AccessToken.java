@@ -17,6 +17,8 @@
 package com.thoughtworks.go.server.domain.accesstoken;
 
 import com.thoughtworks.go.domain.PersistentObject;
+import com.thoughtworks.go.domain.User;
+import com.thoughtworks.go.server.exceptions.AccessTokenValidationException;
 
 import java.util.UUID;
 
@@ -25,20 +27,15 @@ public class AccessToken extends PersistentObject {
     private String description;
     private String value;
     private Long expiresAt;
-    private Long userId;
+    private User user;
+
+    private AccessToken() {
+    }
 
     public AccessToken(String name, String description, Long expiresAt) {
         this.name = name;
         this.description = description;
         this.expiresAt = expiresAt;
-    }
-
-    //TODO add test for this
-    public static AccessToken from(Long userId, AccessTokenInfo accessTokenInfo) {
-        final AccessToken accessToken = new AccessToken(accessTokenInfo.getName(), accessTokenInfo.getDescription(), accessTokenInfo.getExpiresAt());
-        accessToken.value = UUID.randomUUID().toString().replaceAll("-", "").toUpperCase();
-        accessToken.userId = userId;
-        return accessToken;
     }
 
     public String getName() {
@@ -58,6 +55,28 @@ public class AccessToken extends PersistentObject {
     }
 
     public Long getUserId() {
-        return userId;
+        return user.getId();
+    }
+
+    public static AccessToken from(Long userId, AccessTokenInfo accessTokenInfo) {
+        final AccessToken accessToken = new AccessToken(accessTokenInfo.getName(), accessTokenInfo.getDescription(), accessTokenInfo.getExpiresAt());
+        accessToken.value = UUID.randomUUID().toString().replaceAll("-", "").toUpperCase();
+
+        accessToken.user = User.getUserInstanceWithId(userId);
+        return accessToken;
+    }
+
+    public void validate() {
+        if (getName().length() > 255) {
+            AccessTokenValidationException.throwBecauseInvalidName();
+        }
+
+        if (getDescription().length() > 512) {
+            AccessTokenValidationException.throwBecauseInvalidDescription();
+        }
+
+        if (getUserId() == null || getUserId() <= 0) {
+            AccessTokenValidationException.throwBecauseInvalidUserId(getUserId());
+        }
     }
 }

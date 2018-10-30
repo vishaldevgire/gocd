@@ -23,7 +23,6 @@ import com.thoughtworks.go.api.CrudController;
 import com.thoughtworks.go.api.representers.JsonReader;
 import com.thoughtworks.go.api.spring.ApiAuthenticationHelper;
 import com.thoughtworks.go.api.util.GsonTransformer;
-import com.thoughtworks.go.api.util.HaltApiMessages;
 import com.thoughtworks.go.api.util.HaltApiResponses;
 import com.thoughtworks.go.api.util.MessageJson;
 import com.thoughtworks.go.apiv1.accesstoken.representers.AccessTokenInfoRepresenter;
@@ -33,12 +32,15 @@ import com.thoughtworks.go.config.exceptions.RecordNotFoundException;
 import com.thoughtworks.go.i18n.LocalizedMessage;
 import com.thoughtworks.go.server.domain.accesstoken.AccessToken;
 import com.thoughtworks.go.server.domain.accesstoken.AccessTokenInfo;
+import com.thoughtworks.go.server.exceptions.AccessTokenValidationException;
+import com.thoughtworks.go.server.exceptions.DuplicateAccessTokenException;
 import com.thoughtworks.go.server.service.AccessTokenService;
 import com.thoughtworks.go.server.service.EntityHashingService;
 import com.thoughtworks.go.server.service.result.HttpLocalizedOperationResult;
 import com.thoughtworks.go.spark.Routes.AccessTokenAPI;
 import com.thoughtworks.go.spark.spring.SparkSpringController;
 import com.thoughtworks.go.util.Clock;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -54,6 +56,7 @@ import static spark.Spark.*;
 
 @Component
 public class AccessTokenControllerV1 extends ApiController implements SparkSpringController, CrudController<AccessToken> {
+    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(AccessTokenControllerV1.class);
 
     private final ApiAuthenticationHelper apiAuthenticationHelper;
     private final AccessTokenService accessTokenService;
@@ -104,6 +107,7 @@ public class AccessTokenControllerV1 extends ApiController implements SparkSprin
 
     public String getToken(Request request, Response response) throws IOException {
         String tokenName = request.params("name");
+        String errorMessage = String.format("The token with name '%s' was not found.", tokenName);
 
         final Optional<AccessToken> optionalAccessToken = accessTokenService.findTokenForUser(currentUserId(request), tokenName);
 
@@ -111,7 +115,8 @@ public class AccessTokenControllerV1 extends ApiController implements SparkSprin
             return writerForTopLevelObject(request, response, writer -> AccessTokenRepresenter.toJSON(writer, optionalAccessToken.get()));
         }
 
-        throw new RecordNotFoundException(String.format("The token with name '%s' was not found.", tokenName));
+        LOGGER.debug(errorMessage);
+        throw new RecordNotFoundException(errorMessage);
     }
 
     public String createToken(Request request, Response response) {
@@ -123,14 +128,17 @@ public class AccessTokenControllerV1 extends ApiController implements SparkSprin
 
         try {
             return accessTokenService.createToken(currentUserId(request), accessTokenInfo);
-        } catch (RuntimeException e) {
-            throw HaltApiResponses.haltBecauseOfReason(HaltApiMessages.entityAlreadyExistsMessage("access token", accessTokenInfo.getName()));
+        } catch (DuplicateAccessTokenException | AccessTokenValidationException e) {
+            LOGGER.error("Failed to create token", e);
+            throw HaltApiResponses.haltBecauseOfReason(e.getMessage());
         }
     }
 
     public String deleteToken(Request request, Response response) throws IOException {
         String tokenName = request.params("name");
         accessTokenService.deleteToken(currentUserId(request), tokenName);
+
+        LOGGER.debug("Token '{}' was deleted successfully", tokenName);
 
         HttpLocalizedOperationResult result = new HttpLocalizedOperationResult();
         result.setMessage(LocalizedMessage.resourceDeleteSuccessful("access token", tokenName));
