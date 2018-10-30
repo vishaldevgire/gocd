@@ -87,7 +87,7 @@ public class AccessTokenControllerV1 extends ApiController implements SparkSprin
             before("", mimeType, apiAuthenticationHelper::checkUserAnd403);
             before("/*", mimeType, apiAuthenticationHelper::checkUserAnd403);
 
-            get("", mimeType, this::getAllTokensForUser);
+            get("", mimeType, this::listAllTokensForUser);
             get(AccessTokenAPI.GET_TOKEN, mimeType, this::getToken);
             post(AccessTokenAPI.CREATE_TOKEN, mimeType, this::createToken);
             delete(AccessTokenAPI.DELETE_TOKEN, mimeType, this::deleteToken);
@@ -95,8 +95,8 @@ public class AccessTokenControllerV1 extends ApiController implements SparkSprin
         });
     }
 
-    public String getAllTokensForUser(Request request, Response response) throws IOException {
-        List<AccessToken> allTokens = accessTokenService.getAllTokensForUser(currentUserId(request));
+    public String listAllTokensForUser(Request request, Response response) throws IOException {
+        List<AccessToken> allTokens = accessTokenService.listAllTokensForUser(currentUserId(request));
 
         return writerForTopLevelObject(request, response,
                 outputWriter -> AccessTokensRepresenter.toJSON(outputWriter, allTokens));
@@ -105,7 +105,7 @@ public class AccessTokenControllerV1 extends ApiController implements SparkSprin
     public String getToken(Request request, Response response) throws IOException {
         String tokenName = request.params("name");
 
-        final Optional<AccessToken> optionalAccessToken = accessTokenService.getTokenForUser(currentUserId(request), tokenName);
+        final Optional<AccessToken> optionalAccessToken = accessTokenService.findTokenForUser(currentUserId(request), tokenName);
 
         if (optionalAccessToken.isPresent()) {
             return writerForTopLevelObject(request, response, writer -> AccessTokenRepresenter.toJSON(writer, optionalAccessToken.get()));

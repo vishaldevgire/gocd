@@ -25,6 +25,7 @@ public class AccessToken extends PersistentObject {
     private String description;
     private String value;
     private Long expiresAt;
+    private Long userId;
 
     public AccessToken(String name, String description, Long expiresAt) {
         this.name = name;
@@ -32,9 +33,11 @@ public class AccessToken extends PersistentObject {
         this.expiresAt = expiresAt;
     }
 
-    public static AccessToken from(AccessTokenInfo accessTokenInfo) {
+    //TODO add test for this
+    public static AccessToken from(Long userId, AccessTokenInfo accessTokenInfo) {
         final AccessToken accessToken = new AccessToken(accessTokenInfo.getName(), accessTokenInfo.getDescription(), accessTokenInfo.getExpiresAt());
         accessToken.value = UUID.randomUUID().toString().replaceAll("-", "").toUpperCase();
+        accessToken.userId = userId;
         return accessToken;
     }
 
@@ -52,5 +55,9 @@ public class AccessToken extends PersistentObject {
 
     public Long getExpiresAt() {
         return expiresAt;
+    }
+
+    public Long getUserId() {
+        return userId;
     }
 }

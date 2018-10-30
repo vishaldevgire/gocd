@@ -66,7 +66,7 @@ class AccessTokenControllerV1Test implements SecurityServiceTrait, ControllerTra
     class Security implements SecurityTestTrait, NonAnonymousUserSecurity {
       @Override
       String getControllerMethodUnderTest() {
-        return 'getAllTokensForUser'
+        return 'listAllTokensForUser'
       }
 
       @Override
@@ -151,7 +151,7 @@ class AccessTokenControllerV1Test implements SecurityServiceTrait, ControllerTra
         def token1 = new AccessToken("PersonToken", "Personal Token", 987654321)
         def token2 = new AccessToken("WorkToken", "Token for work only", 876543219)
 
-        when(accessTokenService.getAllTokensForUser(currentUserLoginId())).thenReturn([token1, token2])
+        when(accessTokenService.listAllTokensForUser(currentUserLoginId())).thenReturn([token1, token2])
 
         getWithApiHeader(controller.controllerPath())
 
@@ -219,7 +219,7 @@ class AccessTokenControllerV1Test implements SecurityServiceTrait, ControllerTra
 
         def token1 = new AccessToken("PersonToken", "Personal Token", 987654321)
 
-        when(accessTokenService.getTokenForUser(currentUserLoginId(), "PersonToken")).thenReturn(Optional.of(token1))
+        when(accessTokenService.findTokenForUser(currentUserLoginId(), "PersonToken")).thenReturn(Optional.of(token1))
 
         getWithApiHeader(controller.controllerPath("PersonToken"))
 
@@ -231,7 +231,7 @@ class AccessTokenControllerV1Test implements SecurityServiceTrait, ControllerTra
 
       @Test
       void 'should return 404 for a unknown token'() {
-        when(accessTokenService.getTokenForUser(currentUserLoginId(), "UnknownToken")).thenReturn(Optional.empty())
+        when(accessTokenService.findTokenForUser(currentUserLoginId(), "UnknownToken")).thenReturn(Optional.empty())
 
         getWithApiHeader(controller.controllerPath("UnknownToken"))
 

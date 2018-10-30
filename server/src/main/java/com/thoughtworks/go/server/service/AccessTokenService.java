@@ -39,29 +39,29 @@ public class AccessTokenService {
     }
 
     public String createToken(Long userId, AccessTokenInfo accessTokenInfo) {
-        final Optional<AccessToken> tokenFromDB = getTokenForUser(userId, accessTokenInfo.getName());
+        final Optional<AccessToken> tokenFromDB = findTokenForUser(userId, accessTokenInfo.getName());
 
         if (tokenFromDB.isPresent()) {
             throw new RuntimeException(format("Token with name '%s' already exist.", accessTokenInfo.getName()));
         }
 
-        final AccessToken accessToken = AccessToken.from(accessTokenInfo);
+        final AccessToken accessToken = AccessToken.from(userId, accessTokenInfo);
         return accessTokenDao.save(accessToken).getValue();
     }
 
-    public List<AccessToken> getAllTokensForUser(Long userId) {
-        return accessTokenDao.getAllTokensForUser(userId);
+    public List<AccessToken> listAllTokensForUser(Long userId) {
+        return accessTokenDao.listAllTokensForUser(userId);
     }
 
-    public Optional<AccessToken> getTokenForUser(Long userId, String tokenName) {
-        return getAllTokensForUser(userId)
+    public Optional<AccessToken> findTokenForUser(Long userId, String tokenName) {
+        return listAllTokensForUser(userId)
                 .stream()
                 .filter(accessToken -> StringUtils.equals(accessToken.getName(), tokenName))
                 .findFirst();
     }
 
     public void deleteToken(Long userId, String tokenName) {
-        final Optional<AccessToken> tokenFromDB = getTokenForUser(userId, tokenName);
+        final Optional<AccessToken> tokenFromDB = findTokenForUser(userId, tokenName);
 
         if (!tokenFromDB.isPresent()) {
             throw new RecordNotFoundException(format("The token with name '%s' was not found.", tokenName));

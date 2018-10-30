@@ -76,8 +76,9 @@ public class AccessTokenServiceTest {
             assertThat(captorValue.getName()).isEqualTo("PersonalAccessToken");
             assertThat(captorValue.getDescription()).isEqualTo("This is a dummy token");
             assertThat(captorValue.getExpiresAt()).isEqualTo(testingClock.currentTimeMillis());
+            assertThat(captorValue.getUserId()).isEqualTo(1L);
 
-            verify(accessTokenDao).getAllTokensForUser(1L);
+            verify(accessTokenDao).listAllTokensForUser(1L);
             verify(accessTokenDao).save(captorValue);
             verifyNoMoreInteractions(accessTokenDao);
         }
@@ -87,13 +88,13 @@ public class AccessTokenServiceTest {
             final AccessToken existingToken = new AccessToken("PersonalAccessToken", "This is previously created token.", testingClock.currentTimeMillis());
             final AccessTokenInfo accessTokenInfo = new AccessTokenInfo("PersonalAccessToken", "This is a dummy token", testingClock.currentTimeMillis());
 
-            when(accessTokenDao.getAllTokensForUser(1L)).thenReturn(singletonList(existingToken));
+            when(accessTokenDao.listAllTokensForUser(1L)).thenReturn(singletonList(existingToken));
 
             final Exception exception = assertThrows(Exception.class, () -> accessTokenService.createToken(1L, accessTokenInfo));
 
             assertThat(exception.getMessage()).isEqualTo("Token with name 'PersonalAccessToken' already exist.");
 
-            verify(accessTokenDao).getAllTokensForUser(1L);
+            verify(accessTokenDao).listAllTokensForUser(1L);
             verifyNoMoreInteractions(accessTokenDao);
         }
     }
@@ -102,12 +103,12 @@ public class AccessTokenServiceTest {
     class GetAllTokensForUser {
         @Test
         void shouldGetAllTokens() {
-            when(accessTokenDao.getAllTokensForUser(1L)).thenReturn(Arrays.asList(
+            when(accessTokenDao.listAllTokensForUser(1L)).thenReturn(Arrays.asList(
                     new AccessToken("Token-A", "token for a", testingClock.currentTimeMillis()),
                     new AccessToken("Token-B", "token for b", testingClock.currentTimeMillis())
             ));
 
-            final List<AccessToken> allTokensForUser = accessTokenService.getAllTokensForUser(1L);
+            final List<AccessToken> allTokensForUser = accessTokenService.listAllTokensForUser(1L);
 
             assertThat(allTokensForUser)
                     .hasSize(2)
@@ -116,19 +117,19 @@ public class AccessTokenServiceTest {
                             new AccessToken("Token-B", "token for b", testingClock.currentTimeMillis())
                     );
 
-            verify(accessTokenDao).getAllTokensForUser(1L);
+            verify(accessTokenDao).listAllTokensForUser(1L);
             verifyNoMoreInteractions(accessTokenDao);
         }
 
         @Test
         void shouldReturnEmptyListIfNoTokensFoundForGivenUSerId() {
-            when(accessTokenDao.getAllTokensForUser(1L)).thenReturn(Collections.emptyList());
+            when(accessTokenDao.listAllTokensForUser(1L)).thenReturn(Collections.emptyList());
 
-            final List<AccessToken> allTokensForUser = accessTokenService.getAllTokensForUser(1L);
+            final List<AccessToken> allTokensForUser = accessTokenService.listAllTokensForUser(1L);
 
             assertThat(allTokensForUser).isEmpty();
 
-            verify(accessTokenDao).getAllTokensForUser(1L);
+            verify(accessTokenDao).listAllTokensForUser(1L);
             verifyNoMoreInteractions(accessTokenDao);
         }
     }
@@ -138,33 +139,33 @@ public class AccessTokenServiceTest {
 
         @Test
         void shouldGetToken() {
-            when(accessTokenDao.getAllTokensForUser(1L)).thenReturn(Arrays.asList(
+            when(accessTokenDao.listAllTokensForUser(1L)).thenReturn(Arrays.asList(
                     new AccessToken("Token-A", "token for a", testingClock.currentTimeMillis()),
                     new AccessToken("Token-B", "token for b", testingClock.currentTimeMillis())
             ));
 
-            final Optional<AccessToken> optionalAccessToken = accessTokenService.getTokenForUser(1L, "Token-B");
+            final Optional<AccessToken> optionalAccessToken = accessTokenService.findTokenForUser(1L, "Token-B");
 
             assertThat(optionalAccessToken.isPresent()).isTrue();
             assertThat(optionalAccessToken.get())
                     .isEqualTo(new AccessToken("Token-B", "token for b", testingClock.currentTimeMillis()));
 
-            verify(accessTokenDao).getAllTokensForUser(1L);
+            verify(accessTokenDao).listAllTokensForUser(1L);
             verifyNoMoreInteractions(accessTokenDao);
         }
 
         @Test
         void shouldReturnEmptyOptionWhenTokenDoesNotExist() {
-            when(accessTokenDao.getAllTokensForUser(1L)).thenReturn(Arrays.asList(
+            when(accessTokenDao.listAllTokensForUser(1L)).thenReturn(Arrays.asList(
                     new AccessToken("Token-A", "token for a", testingClock.currentTimeMillis()),
                     new AccessToken("Token-B", "token for b", testingClock.currentTimeMillis())
             ));
 
-            final Optional<AccessToken> optionalAccessToken = accessTokenService.getTokenForUser(1L, "Token-C");
+            final Optional<AccessToken> optionalAccessToken = accessTokenService.findTokenForUser(1L, "Token-C");
 
             assertThat(optionalAccessToken.isPresent()).isFalse();
 
-            verify(accessTokenDao).getAllTokensForUser(1L);
+            verify(accessTokenDao).listAllTokensForUser(1L);
             verifyNoMoreInteractions(accessTokenDao);
         }
     }
@@ -173,21 +174,21 @@ public class AccessTokenServiceTest {
     class DeleteToken {
         @Test
         void shouldDeleteToken() {
-            when(accessTokenDao.getAllTokensForUser(1L)).thenReturn(Arrays.asList(
+            when(accessTokenDao.listAllTokensForUser(1L)).thenReturn(Arrays.asList(
                     new AccessToken("Token-A", "token for a", testingClock.currentTimeMillis()),
                     new AccessToken("Token-B", "token for b", testingClock.currentTimeMillis())
             ));
 
             accessTokenService.deleteToken(1L, "Token-B");
 
-            verify(accessTokenDao).getAllTokensForUser(1L);
+            verify(accessTokenDao).listAllTokensForUser(1L);
             verify(accessTokenDao).delete(new AccessToken("Token-B", "token for b", testingClock.currentTimeMillis()));
             verifyNoMoreInteractions(accessTokenDao);
         }
 
         @Test
         void shouldThrowRecordNotFoundExceptionWhenTokenDoesNotExist() {
-            when(accessTokenDao.getAllTokensForUser(1L)).thenReturn(Arrays.asList(
+            when(accessTokenDao.listAllTokensForUser(1L)).thenReturn(Arrays.asList(
                     new AccessToken("Token-A", "token for a", testingClock.currentTimeMillis()),
                     new AccessToken("Token-B", "token for b", testingClock.currentTimeMillis())
             ));
@@ -196,7 +197,7 @@ public class AccessTokenServiceTest {
 
             assertThat(thrown.getMessage()).isEqualTo("The token with name 'Token-C' was not found.");
 
-            verify(accessTokenDao).getAllTokensForUser(1L);
+            verify(accessTokenDao).listAllTokensForUser(1L);
             verifyNoMoreInteractions(accessTokenDao);
         }
     }
