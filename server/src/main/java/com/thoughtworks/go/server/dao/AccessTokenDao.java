@@ -29,6 +29,7 @@ import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class AccessTokenDao extends HibernateDaoSupport {
@@ -58,6 +59,15 @@ public class AccessTokenDao extends HibernateDaoSupport {
                 .add(Restrictions.eq("user", User.getUserInstanceWithId(userId)))
                 .setCacheable(true)
                 .list());
+    }
+
+    public Optional<AccessToken> findTokenByValue(String value) {
+        return Optional.ofNullable(transactionTemplate.execute((TransactionCallback<AccessToken>) status -> (AccessToken) sessionFactory
+                .getCurrentSession()
+                .createCriteria(AccessToken.class)
+                .add(Restrictions.eq("value", value))
+                .setCacheable(true)
+                .uniqueResult()));
     }
 
     public void delete(AccessToken accessToken) {

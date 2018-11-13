@@ -65,6 +65,10 @@ public class AccessTokenService {
         return accessTokenDao.listAllTokensForUser(userId);
     }
 
+    public Optional<AccessToken> findTokenByValue(String token) {
+        return accessTokenDao.findTokenByValue(token);
+    }
+
     public Optional<AccessToken> findTokenForUser(Long userId, String tokenName) {
         return listAllTokensForUser(userId)
                 .stream()

@@ -34,7 +34,8 @@ public class AuthenticationFilterChain extends FilterChainProxy {
             @Qualifier("reAuthenticationWithChallengeFilter") Filter reAuthenticationWithChallenge,
             @Qualifier("basicAuthenticationWithChallengeFilter") Filter basicAuthenticationWithChallengeFilter,
             @Qualifier("basicAuthenticationWithRedirectToLoginFilter") Filter basicAuthenticationWithRedirectToLoginFilter,
-            @Qualifier("assumeAnonymousUserFilter") Filter assumeAnonymousUserFilter) {
+            @Qualifier("assumeAnonymousUserFilter") Filter assumeAnonymousUserFilter,
+            @Qualifier("accessTokenAuthenticationFilter") Filter accessTokenAuthenticationFilter) {
         super(FilterChainBuilder.newInstance()
                 // X509 for agent remoting and agent-websocket
                 .addFilterChain("/remoting/**", x509AuthenticationFilter)
@@ -44,10 +45,10 @@ public class AuthenticationFilterChain extends FilterChainProxy {
                 .addFilterChain("/add-on/**", assumeAnonymousUserFilter)
 
                 // For API authentication
-                .addFilterChain("/api/config-repository.git/**", invalidateAuthenticationOnSecurityConfigChangeFilter, assumeAnonymousUserFilter, reAuthenticationWithChallenge, basicAuthenticationWithChallengeFilter)
-                .addFilterChain("/cctray.xml", invalidateAuthenticationOnSecurityConfigChangeFilter, reAuthenticationWithChallenge, assumeAnonymousUserFilter, basicAuthenticationWithChallengeFilter)
+                .addFilterChain("/api/config-repository.git/**", invalidateAuthenticationOnSecurityConfigChangeFilter, assumeAnonymousUserFilter, reAuthenticationWithChallenge, accessTokenAuthenticationFilter, basicAuthenticationWithChallengeFilter)
+                .addFilterChain("/cctray.xml", invalidateAuthenticationOnSecurityConfigChangeFilter, reAuthenticationWithChallenge, assumeAnonymousUserFilter, accessTokenAuthenticationFilter, basicAuthenticationWithChallengeFilter)
                 .addFilterChain("/api/webhooks/*/notify", assumeAnonymousUserFilter)
-                .addFilterChain("/api/**", invalidateAuthenticationOnSecurityConfigChangeFilter, reAuthenticationWithChallenge, assumeAnonymousUserFilter, basicAuthenticationWithChallengeFilter)
+                .addFilterChain("/api/**", invalidateAuthenticationOnSecurityConfigChangeFilter, reAuthenticationWithChallenge, assumeAnonymousUserFilter, accessTokenAuthenticationFilter, basicAuthenticationWithChallengeFilter)
 
                 .addFilterChain("/api/version", invalidateAuthenticationOnSecurityConfigChangeFilter, reAuthenticationWithRedirectToLoginPage, assumeAnonymousUserFilter, basicAuthenticationWithRedirectToLoginFilter)
 

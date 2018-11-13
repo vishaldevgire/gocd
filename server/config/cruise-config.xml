@@ -15,6 +15,7 @@
       </roles>
       <admins>
         <user>admin</user>
+        <user>jez</user>
       </admins>
     </security>
     <backup emailOnSuccess="true" emailOnFailure="true" />

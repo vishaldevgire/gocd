@@ -19,6 +19,7 @@ package com.thoughtworks.go.server.domain.accesstoken;
 import com.thoughtworks.go.domain.PersistentObject;
 import com.thoughtworks.go.domain.User;
 import com.thoughtworks.go.server.exceptions.AccessTokenValidationException;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.UUID;
 
@@ -67,11 +68,11 @@ public class AccessToken extends PersistentObject {
     }
 
     public void validate() {
-        if (getName().length() > 255) {
+        if (StringUtils.length(getName()) > 255) {
             AccessTokenValidationException.throwBecauseInvalidName();
         }
 
-        if (getDescription().length() > 512) {
+        if (StringUtils.length(getDescription()) > 512) {
             AccessTokenValidationException.throwBecauseInvalidDescription();
         }
 
